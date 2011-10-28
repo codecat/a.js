@@ -18,7 +18,7 @@ $(function() { // This is executed when the document is ready.
 	$("h1").style.color = "#f00";
 	
 	// Append content to the body tag
-	$("body").append("<p>Hello world!</p><p>I'm just adding some P tags.</p>");
+	$("body").append("<p>Hello world!</p><p>I'm just adding some p tags.</p>");
 	
 	// Tell the user how many p tags there are
 	alert("There are " + $("p").length + " p tags.");
