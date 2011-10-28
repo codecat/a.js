@@ -33,7 +33,7 @@ $(function() { // This is executed when the document is ready.
 	
 	// Do an AJAX POST request
 	$("POST", "post.php", "test=" + escape("This is a test!"), function(result) {
-		alert("Response from servers:\n\n" + result);
+		alert("Response from server:\n\n" + result);
 	});
 });
 ```
