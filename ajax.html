@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>a.js AJAX test</title>
+		<script src="a.js"></script>
+		<script>
+			// Alias
+			$ = _$;
+			
+			function stripHTML(s) {
+				s = s.replace(/</g, "&lt;");
+				s = s.replace(/>/g, "&gt;");
+				s = s.replace(/"/g, "&quot;");
+				return s;
+			}
+			
+			function doGETRequest() {
+				$("GET", "a.js", function(result) {
+					$("h2").set("Result");
+					$("textarea").set(stripHTML(result));
+				});
+				$("h2").set("Downloading...");
+			}
+			
+			function doPOSTRequest() {
+				$("POST", "post.php", "test=" + escape(prompt("Enter some text:")), function(result) {
+					$("h2").set("Result");
+					$("textarea").set(stripHTML(result));
+				});
+				$("h2").set("Posting...");
+			}
+		</script>
+	</head>
+	<body>
+		<button onclick="doGETRequest()">GET a.js</button>
+		<button onclick="doPOSTRequest()">POST post.php</button>
+		<h2></h2><textarea style="width:600px;height:300px;"></textarea>
+	</body>
+</html>
