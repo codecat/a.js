@@ -50,7 +50,7 @@ function _$(s,url,data,callback) {
 						s = sMatches[1];
 					}
 					
-					var elms;
+					var elms = [];
 					if(isID)
 						ret = src.getElementById(s);
 					else if(isClass)
@@ -58,12 +58,14 @@ function _$(s,url,data,callback) {
 					else if(isTag)
 						elms = src.getElementsByTagName(s);
 					
-					if(elms.length == 1)
-						ret = elms[0];
-					else {
-						ret = elms;
-						if(sIndex != -1)
-							ret = elms[sIndex];
+					if(!ret) {
+						if(elms.length == 1)
+							ret = elms[0];
+						else {
+							ret = elms;
+							if(sIndex != -1)
+								ret = elms[sIndex];
+						}
 					}
 				}
 				break;
@@ -81,6 +83,7 @@ function _$(s,url,data,callback) {
 		ret.append = function(c) { ret.innerHTML += c; return this; };
 		ret.prepend = function(c) { ret.innerHTML = c + ret.innerHTML;  return this; };
 		ret.set = function(c) { ret.innerHTML = c; return this; }
+		ret.get = function() { return ret.innerHTML; }
 		ret.clear = function() { ret.innerHTML = "";  return this; }
 	}
 	
