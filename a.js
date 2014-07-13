@@ -1,91 +1,173 @@
-function _$(s,url,data,callback) {
-	var src = document;
-	if(this != "[object Window]")
-		src = this;
-	var ret = false;
-	
-	if(url != undefined && data != undefined) {
-		var req;
-		
-		if(s != "POST" && callback == undefined)
-			callback = data;
-		
-		if(window.XMLHttpRequest)
-			req = new XMLHttpRequest();
-		else
-			req = new ActiveXObject("Microsoft.XMLHTTP");
-		
-		if(req) {
-			req.onreadystatechange = function() {
-				if(req.readyState == 4 && req.status == 200)
-					callback(req.responseText);
-			};
-			
-			req.open(s, url, true);
-			
-			if(s == "POST") {
-				req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				req.setRequestHeader("Content-length", data.length);
-				req.setRequestHeader("Connection", "close");
-				req.send(data);
-			} else {
-				req.send();
-			}
-		}
+var $ = function(selector) {
+	if(selector == undefined) {
+		return this;
 	} else {
-		switch(typeof(s)) {
+		switch(typeof(selector)) {
 			case "string":
-				if(s != "") {
-					var isID = s[0] == "#";
-					var isClass = s[0] == ".";
-					var isTag = (!isID && !isClass);
-					
-					if(isID || isClass)
-						s = s.substr(1);
-					
-					var sIndex = -1;
-					var sMatches = s.match(/^(.+)(\[([0-9]+)\])$/);
-					if(sMatches) {
-						sIndex = parseInt(sMatches[3]);
-						s = sMatches[1];
-					}
-					
-					var elms = [];
-					if(isID)
-						ret = src.getElementById(s);
-					else if(isClass)
-						elms = src.getElementsByClassName(s);
-					else if(isTag)
-						elms = src.getElementsByTagName(s);
-					
-					if(!ret) {
-						if(elms.length == 1)
-							ret = elms[0];
-						else {
-							ret = elms;
-							if(sIndex != -1)
-								ret = elms[sIndex];
-						}
-					}
+				return $.select(selector);
+			case "object":
+				var ret = [];
+				for(o in selector) {
+					ret[o] = $.select(o);
 				}
-				break;
-			case "function":
-				document.addEventListener("DOMContentLoaded", s, false);
-				break;
-			default:
-				console.log("Unknown type in a.js: '" + typeof(s) + "'");
+				return ret;
 				break;
 		}
 	}
-	
-	if(ret !== false) {
-		ret._$ = _$;
-		ret.append = function(c) { ret.innerHTML += c; return this; };
-		ret.prepend = function(c) { ret.innerHTML = c + ret.innerHTML;  return this; };
-		ret.set = function(c) { ret.innerHTML = c; return this; }
-		ret.get = function() { return ret.innerHTML; }
-		ret.clear = function() { ret.innerHTML = "";  return this; }
+};
+
+$.plugins = [];
+
+$.select = function(selector)
+{
+	var origin = document;
+	if(this != $) {
+		origin = this;
 	}
+	
+	var ret = null;
+	switch(selector[0]) {
+		case "#":
+			ret = document.getElementById(selector.substr(1));
+			break;
+		case ".":
+			ret = origin.getElementsByClassName(selector.substr(1));
+			break;
+		default:
+			ret = origin.getElementsByTagName(selector);
+			break;
+	}
+	
+	if(ret == null) {
+		return null;
+	}
+	
+	if(ret.length != undefined) {
+		for(i=0; i<ret.length; i++) {
+			ret[i] = this.addFuncs(ret[i]);
+		}
+	}
+	
+	return this.addFuncs(ret);
+};
+
+$.ready = function(callback)
+{
+	document.addEventListener("DOMContentLoaded", callback, false);
+};
+
+$.addFuncs = function(obj)
+{
+	var ret = obj;
+	
+	ret.set = function(key, str) {
+		if(str == undefined) {
+			ret.innerHTML = key;
+			return ret;
+		} else {
+			ret[key] = str;
+			return ret;
+		}
+	}
+	ret.get = function() { return ret.innerHTML; }
+	ret.set = function(str) { ret.innerHTML = str; return ret; }
+	ret.append = function(str) { ret.innerHTML += str; return ret; }
+	ret.prepend = function(str) { ret.innerHTML = ret.innerHTML + str; return ret; }
+	ret.empty = function() { ret.innerHTML = ""; return ret; }
+	ret.remove = function() { ret.parentNode.removeChild(ret); }
+	ret.setClass = function(str) { ret.className = str; return ret; }
+	ret.setId = function(str) { ret.id = str; return ret; }
+	ret.event = function(e, cb) { ret.addEventListener(e, cb); return ret; }
+	ret.eventOnClick = function(cb) { ret.event("click", cb); return ret; }
+	for(o in $.plugins) {
+		if(this.plugins[o].addFuncs != undefined) {
+			ret = this.plugins[o].addFuncs(ret);
+		}
+	}
+	
+	ret = this.addAliases(ret);
+	
+	// not sure why i had this..
+	//for(o in $) ret[o] = $[o];
+	return ret;
+};
+
+$.addAliases = function(obj)
+{
+	var ret = obj;
+	
+	if(ret.parentNode != null) ret.parent = this.addFuncs(ret.parentNode);
 	
 	return ret;
-}
+};
+
+$.create = function(elem, innerHtml)
+{
+	if(elem == undefined) return null;
+	
+	var ret = document.createElement(elem);
+	if(innerHtml != undefined) ret.innerHTML = innerHtml;
+	
+	return this.addFuncs(ret);
+};
+
+$.make = function(elem, innerHtml, addTo)
+{
+	if(elem == undefined) return null;
+	
+	var ret = $.create(elem, innerHtml);
+	
+	if(addTo != undefined) {
+		addTo.appendChild(ret);
+	}else{
+		if(this != $) {
+			this.appendChild(ret);
+		}else{
+			document.body.appendChild(ret);
+		}
+	}
+	
+	return this.addAliases(ret);
+};
+
+$.get = function(url, callback)
+{
+	var req;
+	if(window.XMLHttpRequest) {
+		req = new XMLHttpRequest();
+	} else {
+		req = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	
+	if(req) {
+		req.onreadystatechange = function() {
+			if(req.readyState == 4 && req.status == 200)
+				callback(req.responseText);
+		};
+		
+		req.open("GET", url, true);
+		req.send();
+	}
+};
+
+$.post = function(url, data, callback)
+{
+	var req;
+	if(window.XMLHttpRequest)
+		req = new XMLHttpRequest();
+	else
+		req = new ActiveXObject("Microsoft.XMLHTTP");
+	
+	if(req) {
+		req.onreadystatechange = function() {
+			if(req.readyState == 4 && req.status == 200)
+				callback(req.responseText);
+		};
+		
+		req.open("POST", url, true);
+		req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		req.setRequestHeader("Content-Length", data.length);
+		req.setRequestHeader("Connection", "close");
+		req.send(data);
+	}
+};
