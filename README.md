@@ -36,3 +36,13 @@ $.ready(function() { // This is executed when the document is ready.
 	});
 });
 ```
+
+If you include the animation libraries, you can do something like this to animate the width of a div (from 50px to 500px) smoothly:
+
+```js
+$("#someDiv").anim({
+	style: "width",
+	seconds: 1.0,
+	interpolate: "inOutQuad", // from a.easing.js
+}).px(50, 500);
+```
