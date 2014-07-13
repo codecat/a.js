@@ -6,7 +6,6 @@ This Javascript library is very minimalistic, meant to just manage pages or do s
 Example usage:
 
 ```js
-$ = _$; // a.js defaults to _$, to not interfere with other libraries. This is an alias.
 $.ready(function() { // This is executed when the document is ready.
 	// Get an element
 	var elm = $("#id");
